@@ -1,0 +1,14 @@
+tmp_0 = 1+2;
+tmp_1 = 3-4;
+tmp_2 = 5*6;
+tmp_3 = 7/8;
+tmp_4 = 9**10;
+x = 11;
+tmp_5 = x++;
+y = tmp_5;
+tmp_6 = y--;
+tmp_7 = x+tmp_6;
+z = tmp_7;
+tmp_8 = x+y;
+tmp_9 = tmp_8*z;
+longname = tmp_9;

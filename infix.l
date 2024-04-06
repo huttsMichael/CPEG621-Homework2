@@ -2,7 +2,7 @@
 #include <stdlib.h> /* for atoi call */
 #include "infix.tab.h" 
 
-// #define DEBUG /* for debuging: print tokens and their line numbers */
+#define DEBUG /* for debuging: print tokens and their line numbers */
 
 extern int lineNum; /* line number from cal.tab.c */
 
@@ -79,16 +79,23 @@ extern int lineNum; /* line number from cal.tab.c */
 
 "=" {
     #ifdef DEBUG
-    printf("token '=' at line %d\n", lineNum);
+    printf("token %s at line %d\n", yytext, lineNum);
     #endif
-    return '=';
+    return *yytext;
+}
+
+"?" {
+    #ifdef DEBUG
+    printf("token %s at line %d\n", yytext, lineNum);
+    #endif
+    return *yytext;
 }
 
 [a-z]+ {
 	#ifdef DEBUG
 	printf("token %s at line %d\n", yytext, lineNum); 
 	#endif
-	yylval.d = *yytext - 'a';
+	yylval.str = strdup(yytext);
 	return VAR;
 }
 
@@ -96,7 +103,7 @@ extern int lineNum; /* line number from cal.tab.c */
 	#ifdef DEBUG
 	printf("token %s at line %d\n", yytext, lineNum); 
 	#endif
-	yylval.d = atoi(yytext);
+	yylval.str = strdup(yytext);
 	return NUMBER;
 }
 
