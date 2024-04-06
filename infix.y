@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string.h>
 
+#define DEBUG /* for debuging: print tokens and their line numbers */
 #define USR_VARS_MAX_CNT 32
 #define USR_VARS_MAX_LEN 32
 
@@ -82,6 +83,9 @@ exp:
 
 %%
 char* handle_op(char *left, char *operation, char *right) {
+	#ifdef DEBUG
+    printf("handle_op()\n");
+    #endif
 	char tmp_var[USR_VARS_MAX_LEN];
 
 	sprintf(tmp_var, "tmp_%d", tmp_vars_count++);
@@ -98,6 +102,9 @@ char* handle_op(char *left, char *operation, char *right) {
 }
 
 void handle_var(char *var, char* exp) {
+	#ifdef DEBUG
+    printf("handle_var()\n");
+    #endif
 	// search if variable already exists in list of variables
 	// TODO
 
@@ -115,6 +122,9 @@ void handle_var(char *var, char* exp) {
 
 // a little confused on how this is described in lab instructions but did my best
 void handle_if(char *cond_expression) {
+	#ifdef DEBUG
+    printf("handle_if()\n");
+    #endif
 	if_flag = 1;
 
 	fprintf(out_file, "if (%s) {\n", cond_expression);
@@ -123,12 +133,18 @@ void handle_if(char *cond_expression) {
 }
 
 void handle_else(char *expression) {
+	#ifdef DEBUG
+    printf("handle_else()\n");
+    #endif
 	fprintf(out_file, "}\nelse {\n%s = 0;\n}\n", expression);
 
 	return;
 }
 
 int main(int argc, char *argv[]) {
+	#ifdef DEBUG
+    printf("main()\n");
+    #endif
 	// take an input file
 	yyin = fopen(argv[1], "r");
 	out_file = fopen(argv[2], "w");
