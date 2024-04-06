@@ -81,14 +81,14 @@ extern int lineNum; /* line number from cal.tab.c */
     #ifdef DEBUG
     printf("token %s at line %d\n", yytext, lineNum);
     #endif
-    return *yytext;
+    return '=';
 }
 
 "?" {
     #ifdef DEBUG
     printf("token %s at line %d\n", yytext, lineNum);
     #endif
-    return *yytext;
+    return '?';
 }
 
 [a-z]+ {

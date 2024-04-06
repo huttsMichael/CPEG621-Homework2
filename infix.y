@@ -9,6 +9,8 @@
 
 char* handle_op(char *left, char *operation, char *right);
 void handle_var(char *var, char* exp);
+void handle_if(char *cond_expression);
+void handle_else(char *expression);
 
 
 int lineNum = 1;
@@ -16,7 +18,7 @@ void yyerror(char *ps, ...) { /* need this to avoid link problem */
 	printf("%s\n", ps);
 }
 
-int equals_flag = 0; // flag to fix printing variables and using multiple in one operation
+int if_flag = 0; // flag to fix printing variables and using multiple in one operation
 
 char user_vars[USR_VARS_MAX_CNT][USR_VARS_MAX_LEN]; // enough space to store all variables
 
@@ -69,8 +71,12 @@ exp:
 	| exp INC { $$ = handle_op($1, "++", ""); }
 	| exp DEC { $$ = handle_op($1, "--", ""); }
 	| '(' exp ')' { $$ = $2; }
-	| '(' exp ')' '?' '(' exp ')' {
-		printf("%s %s", $2, $6);
+	| '(' exp ')' '?' { 
+		handle_if($2); 
+		} 
+		
+		'(' exp ')' {
+		$$ = $7;
 	}
 	;
 
@@ -99,8 +105,27 @@ void handle_var(char *var, char* exp) {
 
 	strcpy(user_vars[user_vars_count++], var);
 
+	if (if_flag) {
+		handle_else(var);
+	}
+
 	return;
 
+}
+
+// a little confused on how this is described in lab instructions but did my best
+void handle_if(char *cond_expression) {
+	if_flag = 1;
+
+	fprintf(out_file, "if (%s) {\n", cond_expression);
+
+	return;
+}
+
+void handle_else(char *expression) {
+	fprintf(out_file, "}\nelse {\n%s = 0;\n}\n", expression);
+
+	return;
 }
 
 int main(int argc, char *argv[]) {
