@@ -58,17 +58,18 @@ def simulate_execution(instructions: list, max_cycles=50):
                 pipeline_counter -= 1
             else:
                 print(f"more cycles to go: {instr}")
-                
-        for instr in instructions:
+
+        # tackle ready queue before moving to other instructions
+        for instr in ready_queue:
+            if instr['latency'] <= 0:
+                continue
+            
             # compromise to handle overcomplicated far-ahead situations
             if pipeline_counter >= pipeline_max:
                 print("pipeline full")
                 break
-            else:
-                pipeline_counter += 1
 
-            if instr['latency'] <= 0:
-                continue
+
 
             print(f"processing: {instr}")
             
@@ -85,6 +86,39 @@ def simulate_execution(instructions: list, max_cycles=50):
                 print(f"{instr} added to in_progress")
                 busy_vars.append(instr['target'])
                 print(f"{instr['target']} added to busy_vars")
+                pipeline_counter += 1
+
+            try:
+                ready_queue.remove(instr)
+            except:
+                print(f"ERROR, ready_queue: {ready_queue}\ninstr: {instr}")
+                
+        for instr in instructions:
+            if instr['latency'] <= 0:
+                continue
+            
+            # compromise to handle overcomplicated far-ahead situations
+            if pipeline_counter >= pipeline_max:
+                print("pipeline full")
+                break
+
+
+            print(f"processing: {instr}")
+            
+            safe_operation = 1
+            for operand in instr['operands']:
+                if operand in busy_vars:
+                    print(f"operand {operand} busy, instruction unsafe")
+                    safe_operation = 0
+                else:
+                    print(f"{operand} not in busy vars")
+
+            if safe_operation:
+                in_progress.append(instr)
+                print(f"{instr} added to in_progress")
+                busy_vars.append(instr['target'])
+                print(f"{instr['target']} added to busy_vars")
+                pipeline_counter += 1
             else:
                 ready_queue.append(instr)
                 print(f"{instr} added to ready_queue")
