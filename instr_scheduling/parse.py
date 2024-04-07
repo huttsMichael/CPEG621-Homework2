@@ -1,67 +1,131 @@
 import re
+from collections import defaultdict
+from pprint import pprint
 
-# Define latency dictionary
-latency = {
-    '+': 1,
-    '-': 1,
-    '=': 2,
-    '?': 2,
-    '*': 4,
-    '/': 4,
-    '**': 8,
-    'if': 2  # Latency for if-else blocks
+# Define regex patterns for parsing different types of instructions
+patterns = {
+    'operation': re.compile(r'(\w+)\s*=\s*(\w+)\s*([\+\-\*\/])\s*(\w+);'),
+    'assignment': re.compile(r'(\w+)\s*=\s*(\w+);'),
+    'conditional': re.compile(r'if\s*\((\w+)\)\s*\{'),
 }
 
-# Data structure to track dependencies
-dependencies = {}
+# Define latencies for different operations
+latency = {'+': 1, '-': 1, '*': 4, '/': 4, '=': 2, 'if': 2}
 
-# Function to parse three-address code instructions
-def parse_instruction(instruction):
-    match = re.match(r'^(\w+)\s*=\s*(\w+)\s*([\+\-\*/\*\*]?)\s*(\w+)?;?$', instruction)
-    if match:
-        target = match.group(1)
-        operator = match.group(3)
-        operands = [match.group(2)]
-        if match.group(4):
-            operands.append(match.group(4))
-        return target, operator, operands
-    elif re.match(r'^if\s*\((\w+)\)\s*{', instruction):
-        return None, 'if', [re.match(r'^if\s*\((\w+)\)\s*{', instruction).group(1)]
-    elif re.match(r'^}', instruction):
-        return None, 'end_if', []
-    else:
-        return None, None, None
-
-# Function to calculate total runtime
-def calculate_runtime(instructions):
-    cycle = 1
-    for instruction in instructions:
-        target, operator, operands = instruction
-        max_dependency_cycle = cycle
-        for operand in operands:
-            if operand in dependencies:
-                max_dependency_cycle = max(max_dependency_cycle, dependencies[operand])
-        cycle = max_dependency_cycle + latency.get(operator, 0)  # Calculate cycle for the current operation
-        if target:
-            dependencies[target] = cycle  # Update dependency for target variable
-        else:
-            # If it's an if-else block, consider it as a single operation
-            cycle += latency.get(operator, 0)
-        print(f"Cycle {cycle}: Executing {instruction}")
-        print(f"Current state of dependencies: {dependencies}")
-    return cycle
-
-# Main function
-def main(file_path):
+# Parse instructions, ignoring lines that don't match expected patterns
+def parse_instructions(file_content):
+    id = 0
     instructions = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            instruction = parse_instruction(line.strip())
-            if instruction:
-                instructions.append(instruction)
-    
-    total_cycles = calculate_runtime(instructions)
-    print(f"Total runtime: {total_cycles} cycles")
+    for line in file_content.strip().split('\n'):
+        line = line.strip()
+        for type, pattern in patterns.items():
+            if match := pattern.match(line):
+                if type == 'operation':
+                    instructions.append({'id': id, 'type': type, 'target': match.group(1), 'operands': [match.group(2), match.group(4)], 'operator': match.group(3), 'latency': latency[match.group(3)]})
+                elif type == 'assignment':
+                    instructions.append({'id': id, 'type': type, 'target': match.group(1), 'operands': [match.group(2)], 'operator': '=', 'latency': latency['=']})
+                elif type == 'conditional':
+                    instructions.append({'id': id, 'type': type, 'condition': match.group(1), 'latency': latency['if']})
+                id += 1
+                break
+    return instructions
 
-# Run the main function
-main("../outfile_1.txt")
+
+def simulate_execution(instructions: list, max_cycles=50):
+    cycle = 0
+    in_progress = []  # Instruction index to remaining latency
+    completed = []
+    ready_queue = []
+    busy_vars = []
+    pipeline_max = 4
+    pipeline_counter = 0
+
+
+    instruction_queue = instructions.copy()
+
+
+    while cycle < max_cycles and len(completed) < len(instructions):
+        cycle += 1
+        print(f"CYCLE NUMBER: {cycle}")
+
+        for instr in in_progress.copy():
+            instr['latency'] =- 1
+            if instr['latency'] <= 0:
+                print(f"complete: {instr}")
+                completed.append(instr)
+                in_progress.remove(instr)
+                busy_vars.remove(instr['target'])
+                pipeline_counter -= 1
+            else:
+                print(f"more cycles to go: {instr}")
+                
+        for instr in instructions:
+            # compromise to handle overcomplicated far-ahead situations
+            if pipeline_counter >= pipeline_max:
+                print("pipeline full")
+                break
+            else:
+                pipeline_counter += 1
+
+            if instr['latency'] <= 0:
+                continue
+
+            print(f"processing: {instr}")
+            
+            safe_operation = 1
+            for operand in instr['operands']:
+                if operand in busy_vars:
+                    print(f"operand {operand} busy, instruction unsafe")
+                    safe_operation = 0
+                else:
+                    print(f"{operand} not in busy vars")
+
+            if safe_operation:
+                in_progress.append(instr)
+                print(f"{instr} added to in_progress")
+                busy_vars.append(instr['target'])
+                print(f"{instr['target']} added to busy_vars")
+            else:
+                ready_queue.append(instr)
+                print(f"{instr} added to ready_queue")
+
+            try:
+                instruction_queue.remove(instr)
+            except:
+                print(f"ERROR, instruction_queue: {instruction_queue}\ninstr: {instr}")
+
+        print("cycle complete")
+        # print(f"instructions: {instructions}")
+        print(f"instruction_queue: {instruction_queue}")
+        print(f"in_progress: {in_progress}")
+        print(f"ready_queue: {ready_queue}")
+        print(f"busy_vars: {busy_vars}\n\n")
+
+        
+
+
+    return cycle if len(completed) == len(instructions) else "Simulation did not complete"
+
+
+
+# Simulated file content
+file_content = """
+tmp_0 = 1+2;
+x = tmp_0;
+tmp_1 = 3-4;
+y = tmp_1;
+x = 3;
+if (x) {
+ z = 6;
+}
+else {
+z = 0;
+}
+"""
+
+# Parse instructions
+instructions = parse_instructions(file_content)
+
+# Simulate execution
+total_cycles = simulate_execution(instructions)
+print(f"Total runtime: {total_cycles} cycles")
