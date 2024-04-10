@@ -58,7 +58,7 @@ class Scheduler:
     def __init__(self, ddg, instructions):
         self.ddg = ddg.graph
         self.instructions = instructions
-        self.latencies = {'+': 1, '-': 1, '*': 4, '/': 4, '=': 2, 'if': 2}
+        self.latencies = {'+': 1, '-': 1, '*': 4, '/': 4, '**': 8, '=': 2, 'if': 2}
         self.schedule = []
         self.execute()
 

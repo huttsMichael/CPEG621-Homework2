@@ -10,7 +10,7 @@ patterns = {
 }
 
 # Define latencies for different operations
-latency = {'+': 1, '-': 1, '*': 4, '/': 4, '=': 2, 'if': 2}
+latency = {'+': 1, '-': 1, '*': 4, '/': 4, '**': 8, '=': 2, 'if': 2}
 
 # Parse instructions, ignoring lines that don't match expected patterns
 def parse_instructions(file_content):
@@ -33,15 +33,18 @@ def parse_instructions(file_content):
 
 def simulate_execution(instructions: list, max_cycles=50):
     cycle = 0
-    in_progress = []  # Instruction index to remaining latency
-    completed = []
-    ready_queue = []
-    busy_vars = []
+    in_progress = [] # track currently executing instruction
+    completed = [] # track completed instructions
+    ready_queue = [] # track instructions that have been processed but are waiting on dependencies
+    busy_vars = [] # track variables that are currenlty being used
     pipeline_max = 2
     pipeline_counter = 0
 
 
     instruction_queue = instructions.copy()
+
+
+    print(f"instructions: {instructions}")
 
 
     while cycle < max_cycles and len(completed) < len(instructions):
@@ -93,7 +96,7 @@ def simulate_execution(instructions: list, max_cycles=50):
             except:
                 print(f"ERROR, ready_queue: {ready_queue}\ninstr: {instr}")
                 
-        for instr in instructions:
+        for instr in instructions.copy():
             if instr['latency'] <= 0:
                 continue
             
@@ -153,20 +156,20 @@ def simulate_execution(instructions: list, max_cycles=50):
         print(f"ready_queue: {ready_queue}")
         print(f"busy_vars: {busy_vars}\n\n")
 
-        
-
 
     return cycle if len(completed) == len(instructions) else "Simulation did not complete"
 
 
 # Temporarily using non-file for this test
-with open("outfile_1.txt", "r") as file:
+with open("outfile_3.txt", "r") as file:
     file_content = file.readlines()
     print(file_content)
 
 # Parse instructions
+print("Getting instructions")
 instructions = parse_instructions(file_content)
 
 # Simulate execution
+print("Simulating execution")
 total_cycles = simulate_execution(instructions)
 print(f"Total runtime: {total_cycles} cycles")
