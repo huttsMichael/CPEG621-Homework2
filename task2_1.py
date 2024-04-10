@@ -14,15 +14,19 @@ class Instruction:
         
         if "=" in self.line:
             self.targets.append(parts[0])
-            if len(parts) > 3:  # Arithmetic operation
+            # Arithmetic operation
+            if len(parts) > 3:  
                 self.operation = parts[3]
                 self.sources.extend([parts[2], parts[4]])
-            else:  # Simple assignment
+            # Simple assignment
+            else:  
                 self.sources.append(parts[2])
-        elif "if" in self.line:  # Conditional statement
+        # Conditional statement
+        elif "if" in self.line:  
             self.operation = "if"
             self.sources.append(parts[1].strip("()"))
-        elif "else" in self.line:  # Else statement (no operation, just control flow)
+        # Else statement (no operation, just control flow)
+        elif "else" in self.line:  
             self.operation = "else"
         
     def __repr__(self):
@@ -61,22 +65,28 @@ class Scheduler:
     def get_latency(self, instruction):
         if instruction.operation in self.latencies:
             return self.latencies[instruction.operation]
-        return 1  # Default latency for operations not listed (e.g., else)
+        # Default latency for operations not listed (e.g., else)
+        return 1  
 
     def execute(self):
-        ready = [i for i in self.ddg if not self.ddg[i]]  # Instructions with no dependencies
+        # Instructions with no dependencies
+        ready = [i for i in self.ddg if not self.ddg[i]]  
         time = 0
         while len(self.schedule) < len(self.instructions):
             for i in list(ready):
                 instr_latency = self.get_latency(self.instructions[i])
-                self.schedule.append((i, time))  # Schedule instruction i to start at current time
-                time += instr_latency  # Increment time by the latency of the scheduled instruction
+                # Schedule instruction i to start at current time
+                self.schedule.append((i, time))  
+                # Increment time by the latency of the scheduled instruction
+                time += instr_latency  
                 ready.remove(i)
                 # Add successors of the current instruction to the ready list if all their dependencies are scheduled
                 for succ in self.ddg:
                     if i in self.ddg[succ]:
-                        self.ddg[succ].remove(i)  # Remove the current instruction from successor's dependencies
-                        if not self.ddg[succ]:  # If no more dependencies, add to ready list
+                        # Remove the current instruction from successor's dependencies
+                        self.ddg[succ].remove(i)  
+                        # If no more dependencies, add to ready list
+                        if not self.ddg[succ]:  
                             ready.append(succ)
 
     def total_latency(self):
