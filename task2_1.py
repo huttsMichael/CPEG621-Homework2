@@ -1,4 +1,4 @@
-with open("../outfile_2.txt", "r") as file:
+with open("outfile_2.txt", "r") as file:
     tac_lines = file.readlines()
 
 class Instruction:
