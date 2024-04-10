@@ -142,20 +142,7 @@ def simulate_execution(instructions: list, max_cycles=50):
 
 
 
-# Simulated file content
-file_content = """
-tmp_0 = 1+2;
-x = tmp_0;
-tmp_1 = 3-4;
-y = tmp_1;
-x = 3;
-if (x) {
- z = 6;
-}
-else {
-z = 0;
-}
-"""
+file_content = ""
 
 # Parse instructions
 instructions = parse_instructions(file_content)
