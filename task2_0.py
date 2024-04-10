@@ -141,7 +141,7 @@ def simulate_execution(instructions: list, max_cycles=50):
     return cycle if len(completed) == len(instructions) else "Simulation did not complete"
 
 
-
+# Temporarily using non-file for this test
 file_content = ""
 
 # Parse instructions
