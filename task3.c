@@ -6,23 +6,23 @@
 #define MAX_LINE_LENGTH 128
 #define MAX_VAR_COUNT 64
 
-// Function to check if a string is a valid variable name
-int isValidVarName(char *str) {
+// function to check if a string is a valid variable name
+int is_valid_var_name(char *str) {
     if (str == NULL || *str == '\0' || isdigit(str[0])) {
-        return 0; // Invalid if empty or starts with a digit
+        return 0; // invalid if empty or starts with a digit
     }
-    // Ensure all characters are alphanumeric or underscores
+    // ensure all characters are alphanumeric or underscores
     while (*str) {
         if (!isalnum(*str) && *str != '_') {
             return 0;
         }
         str++;
     }
-    return 1; // Valid variable name
+    return 1; // valid variable name
 }
 
-// Function to check if a variable is already in the list
-int inVarList(char varList[][10], int varCount, char *var) {
+// function to check if a variable is already in the list
+int in_var_list(char varList[][10], int varCount, char *var) {
     for (int i = 0; i < varCount; i++) {
         if (strcmp(varList[i], var) == 0) {
             return 1;
@@ -31,12 +31,12 @@ int inVarList(char varList[][10], int varCount, char *var) {
     return 0;
 }
 
-// Function to check if a string starts with a given prefix
-int startsWith(const char *prefix, const char *str) {
+// function to check if a string starts with a given prefix
+int starts_with(const char *prefix, const char *str) {
     return strncmp(prefix, str, strlen(prefix)) == 0;
 }
 
-// Main function to process the three-address code and generate C code
+// main function to process the three-address code and generate c code
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
@@ -57,10 +57,10 @@ int main(int argc, char *argv[]) {
     printf("#include <stdio.h>\n\n");
     printf("int main() {\n");
 
-    // Process each line to generate C code
+    // process each line to generate c code
     while (fgets(line, MAX_LINE_LENGTH, infile) != NULL) {
         char op1[10], op2[10], result[10];
-        if (sscanf(line, "%[^ ] = %[^;];", result, op1) == 2 && isValidVarName(result) && !inVarList(varList, varCount, result)) {
+        if (sscanf(line, "%[^ ] = %[^;];", result, op1) == 2 && is_valid_var_name(result) && !in_var_list(varList, varCount, result)) {
             strcpy(varList[varCount++], result);
             printf("    int %s;\n", result);
         }
@@ -71,35 +71,40 @@ int main(int argc, char *argv[]) {
         char op1[10], op2[10], result[10];
         if (sscanf(line, "%[^ ] = %[^+]+%[^;];", result, op1, op2) == 3) {
             printf("    S%d: %s = %s + %s;\n", labelCounter++, result, op1, op2);
-        } else if (sscanf(line, "%[^ ] = %[^-]-%[^;];", result, op1, op2) == 3) {
+        }
+        else if (sscanf(line, "%[^ ] = %[^-]-%[^;];", result, op1, op2) == 3) {
             printf("    S%d: %s = %s - %s;\n", labelCounter++, result, op1, op2);
-        } else if (sscanf(line, "%[^ ] = %[^;];", result, op1) == 2) {
+        }
+        else if (sscanf(line, "%[^ ] = %[^;];", result, op1) == 2) {
             printf("    S%d: %s = %s;\n", labelCounter++, result, op1);
-        } else if (strstr(line, "if") == line) {
-            // Print the 'if' line, adjusting for the 'if' keyword and the first '(' character
+        }
+        else if (strstr(line, "if") == line) {
+            // print the 'if' line, adjusting for the 'if' keyword and the first '(' character
             printf("    S%d: if (", labelCounter++);
-            // Find the first '(' character and start printing from the next character to avoid duplicating '('
+            // find the first '(' character and start printing from the next character to avoid duplicating '('
             char *ptr = strchr(line, '(');
-            if (ptr && *(++ptr)) {  // Increment ptr to move past the '('
+            if (ptr && *(++ptr)) {  // increment ptr to move past the '('
                 while (*ptr && *ptr != '{') {
                     if (*ptr == '%' || *ptr == '"') {
-                        printf("\\"); // Escape special characters
+                        printf("\\"); // escape special characters
                     }
                     printf("%c", *ptr++);
                 }
             }
             printf(" {\n");
-        } else if (strncmp(line, "else", 4) == 0) {
+        }
+    else if (strncmp(line, "else", 4) == 0) {
             printf("    else {\n");
-        } else if (*line == '}') {
+        }
+    else if (*line == '}') {
             printf("    }\n");
         }
     }
 
-    // Print final variable values
+    // print final variable values
     printf("\n");
     for (int i = 0; i < varCount; i++) {
-        if (!startsWith("tmp_", varList[i])) {  // Skip temporary variables
+        if (!starts_with("tmp_", varList[i])) {  // skip temporary variables
             printf("    printf(\"%%s=%%d\\n\", \"%s\", %s);\n", varList[i], varList[i]);
         }
     }
