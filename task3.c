@@ -37,10 +37,15 @@ int startsWith(const char *prefix, const char *str) {
 }
 
 // Main function to process the three-address code and generate C code
-int main() {
-    FILE *infile = fopen("outfile_1.txt", "r");
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+        return 1;
+    }
+
+    FILE *infile = fopen(argv[1], "r");
     if (!infile) {
-        printf("Error opening file\n");
+        fprintf(stderr, "Error opening file %s\n", argv[1]);
         return 1;
     }
 
@@ -62,7 +67,6 @@ int main() {
     }
     rewind(infile);
 
-    // Generate C code for three-address code
     while (fgets(line, MAX_LINE_LENGTH, infile) != NULL) {
         char op1[10], op2[10], result[10];
         if (sscanf(line, "%[^ ] = %[^+]+%[^;];", result, op1, op2) == 3) {
@@ -91,7 +95,6 @@ int main() {
             printf("    }\n");
         }
     }
-
 
     // Print final variable values
     printf("\n");
